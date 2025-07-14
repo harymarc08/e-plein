@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { StyleSheet } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import * as SQLite from 'expo-sqlite';
@@ -41,22 +41,94 @@ export default function App() {
   }, []);
 
   return (
-    <NavigationContainer>
-      <Tab.Navigator>
-        <Tab.Screen name="Véhicules" component={VehiculeScreen} />
-        <Tab.Screen name="Plein" component={PleinScreen} />
-        <Tab.Screen name="Essence" component={EssenceScreen} />
-      </Tab.Navigator>
-      <StatusBar style="auto" />
-    </NavigationContainer>
+    <View style={styles.container}>
+      <NavigationContainer>
+        <Tab.Navigator
+          screenOptions={{
+            tabBarStyle: {
+              backgroundColor: '#ffffff',
+              borderTopWidth: 0,
+              elevation: 8,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: -2 },
+              shadowOpacity: 0.1,
+              shadowRadius: 8,
+              height: 70,
+              paddingBottom: 10,
+              paddingTop: 10,
+            },
+            tabBarActiveTintColor: '#3b82f6',
+            tabBarInactiveTintColor: '#6b7280',
+            tabBarLabelStyle: {
+              fontSize: 12,
+              fontWeight: '600',
+              marginTop: 4,
+            },
+            headerStyle: {
+              backgroundColor: '#3b82f6',
+              elevation: 4,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 4,
+            },
+            headerTintColor: '#ffffff',
+            headerTitleStyle: {
+              fontWeight: '700',
+              fontSize: 18,
+            },
+          }}
+        >
+          <Tab.Screen 
+            name="Véhicules" 
+            component={VehiculeScreen}
+            options={{
+              tabBarIcon: ({ color, size }) => (
+                <View style={[styles.tabIcon, styles.tabIconSquare, { backgroundColor: color }]} />
+              ),
+            }}
+          />
+          <Tab.Screen 
+            name="Plein" 
+            component={PleinScreen}
+            options={{
+              tabBarIcon: ({ color, size }) => (
+                <View style={[styles.tabIcon, styles.tabIconCircle, { backgroundColor: color }]} />
+              ),
+            }}
+          />
+          <Tab.Screen 
+            name="Essence" 
+            component={EssenceScreen}
+            options={{
+              tabBarIcon: ({ color, size }) => (
+                <View style={[styles.tabIcon, styles.tabIconRounded, { backgroundColor: color }]} />
+              ),
+            }}
+          />
+        </Tab.Navigator>
+      </NavigationContainer>
+      <StatusBar style="light" />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: '#f9fafb',
+  },
+  tabIcon: {
+    width: 24,
+    height: 24,
+  },
+  tabIconSquare: {
+    borderRadius: 4,
+  },
+  tabIconCircle: {
+    borderRadius: 12,
+  },
+  tabIconRounded: {
+    borderRadius: 8,
   },
 });
