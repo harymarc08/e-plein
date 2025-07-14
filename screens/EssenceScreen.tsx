@@ -43,6 +43,12 @@ export default function EssenceScreen() {
     nom: '', prix: '', date: new Date().toISOString().slice(0, 10)
   });
 
+  // Nouveaux états pour la modification
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editEssence, setEditEssence] = useState<{id?: number, nom: string, prix: string, date: string}>({
+    id: undefined, nom: '', prix: '', date: ''
+  });
+
   const fetchEssences = async () => {
     if (!db) return;
     try {
@@ -109,6 +115,38 @@ export default function EssenceScreen() {
     );
   };
 
+  // Nouvelle fonction pour ouvrir le modal de modification
+  const ouvrirModifierEssence = (essence: any) => {
+    setEditEssence({
+      id: essence.id,
+      nom: essence.nom,
+      prix: essence.prix_par_litre.toString(),
+      date: essence.date_validite
+    });
+    setEditModalVisible(true);
+  };
+
+  // Fonction pour modifier une essence
+  const modifierEssence = async () => {
+    if (!editEssence.nom || !editEssence.prix || !editEssence.date) {
+      Alert.alert('Erreur', 'Tous les champs sont obligatoires');
+      return;
+    }
+    if (!db || editEssence.id === undefined) return;
+    try {
+      await db.runAsync(
+        'UPDATE TypeEssence SET nom = ?, prix_par_litre = ?, date_validite = ? WHERE id = ?',
+        [editEssence.nom, parseFloat(editEssence.prix), editEssence.date, editEssence.id]
+      );
+      setEditModalVisible(false);
+      setEditEssence({id: undefined, nom: '', prix: '', date: ''});
+      fetchEssences();
+      if (global.syncEssences) global.syncEssences();
+    } catch (e: any) {
+      Alert.alert('Erreur', e.message);
+    }
+  };
+
   useEffect(() => {
     if (addModalVisible) {
       const backAction = () => {
@@ -148,6 +186,13 @@ export default function EssenceScreen() {
         </View>
 
         <View style={styles.cardActions}>
+          {/* Nouveau bouton Modifier */}
+          <TouchableOpacity
+            onPress={() => ouvrirModifierEssence(item)}
+            style={styles.editButton}
+          >
+            <Text style={styles.editButtonText}>✏️ Modifier</Text>
+          </TouchableOpacity>
           <TouchableOpacity
             onPress={() => supprimerEssence(item.id)}
             style={styles.deleteButton}
@@ -275,6 +320,72 @@ export default function EssenceScreen() {
           </ScrollView>
         </View>
       </Modal>
+
+      {/* Edit Essence Modal */}
+      <Modal visible={editModalVisible} animationType="slide" presentationStyle="pageSheet">
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <View style={styles.modalHeaderContent}>
+              <Text style={styles.modalTitle}>Modifier le type d'essence</Text>
+              <TouchableOpacity
+                onPress={() => setEditModalVisible(false)}
+                style={styles.closeButton}
+              >
+                <Text style={styles.closeButtonText}>×</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+          <ScrollView style={styles.modalContent}>
+            <View style={styles.formSection}>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Nom du type d'essence *</Text>
+                <TextInput
+                  value={editEssence.nom}
+                  onChangeText={text => setEditEssence({...editEssence, nom: text})}
+                  placeholder="Ex: Sans plomb 95, Diesel..."
+                  style={styles.textInput}
+                />
+              </View>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Prix par litre (FMG) *</Text>
+                <TextInput
+                  value={editEssence.prix}
+                  onChangeText={text => setEditEssence({...editEssence, prix: text})}
+                  placeholder="Ex: 1450"
+                  keyboardType="decimal-pad"
+                  style={styles.textInput}
+                />
+              </View>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Date de validité *</Text>
+                <TextInput
+                  value={editEssence.date}
+                  onChangeText={text => setEditEssence({...editEssence, date: text})}
+                  placeholder="YYYY-MM-DD"
+                  style={styles.textInput}
+                />
+                <Text style={styles.helpText}>
+                  Format: AAAA-MM-JJ (ex: 2024-12-25)
+                </Text>
+              </View>
+            </View>
+            <View style={styles.buttonRow}>
+              <TouchableOpacity
+                onPress={() => setEditModalVisible(false)}
+                style={styles.cancelButton}
+              >
+                <Text style={styles.cancelButtonText}>Annuler</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={modifierEssence}
+                style={styles.primaryButton}
+              >
+                <Text style={styles.primaryButtonText}>Enregistrer</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -376,6 +487,7 @@ const styles = StyleSheet.create({
   cardActions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
+    gap: 8, // Ajout d'un espace entre les boutons
   },
   deleteButton: {
     backgroundColor: colors.red50,
@@ -385,6 +497,19 @@ const styles = StyleSheet.create({
   },
   deleteButtonText: {
     color: colors.red600,
+    fontWeight: '600',
+    fontSize: 14,
+  },
+  // Nouveau style pour le bouton Modifier
+  editButton: {
+    backgroundColor: colors.primaryLight,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 12,
+    marginRight: 8,
+  },
+  editButtonText: {
+    color: colors.primaryDark,
     fontWeight: '600',
     fontSize: 14,
   },
